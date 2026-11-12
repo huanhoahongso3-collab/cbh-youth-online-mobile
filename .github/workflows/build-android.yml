@@ -1,0 +1,28 @@
+name: Build Android APK (1.5.3)
+on:
+  push:
+    branches: [v1.5.3-ci]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v3
+      - run: chmod +x android/gradlew
+      - run: |
+          cd android
+          ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a -x lint -x test --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cbh-1.5.3-apk
+          path: android/app/build/outputs/apk/release/*.apk
